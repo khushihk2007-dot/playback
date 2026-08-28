@@ -131,7 +131,7 @@ function Leaderboard() {
                     {m.myRating}/10
                   </div>
                   <div className="hidden md:block font-type text-[9px] uppercase tracking-widest text-[color:var(--color-faded)]" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}>
-                    NO. {m.serial}
+                    NO. {m.serial || "—"}
                   </div>
                 </Link>
               </li>

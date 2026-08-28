@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Search, Ticket } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useMovies, useDocTitle } from "../lib/store";
+import { useAuth } from "../contexts/AuthContext";
 
 import { TicketCard } from "../components/TicketCard";
 import { AddMovieDialog } from "../components/AddMovieDialog";
@@ -36,9 +37,10 @@ const SORTS = [
 
 function Home() {
   const movies = useMovies();
+  const { displayName } = useAuth();
   const archiveTitle = "Playback";
   useDocTitle();
-  const g = greeting("");
+  const g = greeting(displayName || "");
   const [q, setQ] = useState("");
   const [genre, setGenre] = useState("All");
   const [sort, setSort] = useState("newest");

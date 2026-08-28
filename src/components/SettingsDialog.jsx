@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, KeyRound, CheckCircle2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 
 export function SettingsDialog({ open, onOpenChange }) {
-  const { user, displayName, signOut, updateProfile } = useAuth();
-  const [name, setName]             = useState("");
-  const [isSaving, setIsSaving]     = useState(false);
+  const { user, displayName, signOut, updateProfile, resetPassword } = useAuth();
+  const [name, setName]                 = useState("");
+  const [isSaving, setIsSaving]         = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isResetting, setIsResetting]   = useState(false);
+  const [resetSent, setResetSent]       = useState(false);
 
   // Sync input with current displayName whenever the dialog opens
   useEffect(() => {
-    if (open) setName(displayName || "");
+    if (open) {
+      setName(displayName || "");
+      setResetSent(false);
+    }
   }, [open, displayName]);
 
   if (!open) return null;
@@ -41,6 +46,19 @@ export function SettingsDialog({ open, onOpenChange }) {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!user?.email) return;
+    setIsResetting(true);
+    try {
+      await resetPassword(user.email);
+      setResetSent(true);
+    } catch (err) {
+      toast.error(err.message || "Failed to send reset email.");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs"
@@ -60,7 +78,7 @@ export function SettingsDialog({ open, onOpenChange }) {
           </div>
           <button
             onClick={() => onOpenChange(false)}
-            className="text-[color:var(--color-parchment)]/70 hover:text-[color:var(--color-brass)] transition-colors p-1"
+            className="text-[color:var(--color-parchment)]/70 hover:text-[color:var(--color-brass)] transition-colors p-1 cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -103,6 +121,37 @@ export function SettingsDialog({ open, onOpenChange }) {
                 Read-only ticket credential.
               </div>
             </label>
+
+            {/* Password Reset */}
+            <div className="border-t border-[color:var(--color-walnut)]/20 pt-4">
+              <div className="font-type text-[9px] uppercase tracking-[0.2em] text-[color:var(--color-faded)] mb-2">
+                Password
+              </div>
+              {resetSent ? (
+                <div
+                  className="flex items-start gap-2 rounded-sm border px-3 py-2.5"
+                  style={{
+                    background: "rgba(34,139,34,0.07)",
+                    borderColor: "rgba(34,139,34,0.25)",
+                    color: "#1e531e",
+                  }}
+                >
+                  <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
+                  <p className="font-type text-[10px] uppercase tracking-[0.12em] leading-relaxed">
+                    Reset link sent to <span className="font-bold">{user?.email}</span>. Check your inbox.
+                  </p>
+                </div>
+              ) : (
+                <button
+                  onClick={handleResetPassword}
+                  disabled={isResetting}
+                  className="w-full flex items-center justify-center gap-2 border border-[color:var(--color-walnut)]/50 hover:border-[color:var(--color-cinema)]/60 hover:bg-[color:var(--color-cinema)]/5 text-[color:var(--color-walnut)] hover:text-[color:var(--color-cinema)] py-2 px-4 font-type text-[10px] uppercase tracking-[0.2em] transition-all cursor-pointer active:translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed rounded-sm"
+                >
+                  <KeyRound className="h-3.5 w-3.5" />
+                  {isResetting ? "SENDING..." : "SEND PASSWORD RESET EMAIL"}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Action buttons */}

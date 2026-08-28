@@ -98,8 +98,17 @@ export function AuthProvider({ children }) {
     if (patch.display_name !== undefined) setDisplayName(patch.display_name || "");
   }, []);
 
+  // ── Reset password ─────────────────────────────────────────────────────────
+  const resetPassword = useCallback(async (email) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    if (error) throw new Error(friendlyError(error));
+    return data;
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, displayName, signIn, signUp, signOut, updateProfile }}>
+    <AuthContext.Provider value={{ user, session, loading, displayName, signIn, signUp, signOut, updateProfile, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

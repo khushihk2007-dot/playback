@@ -121,19 +121,21 @@ async function getCurrentUserId() {
 // ─────────────────────────────────────────────────────────────────────────────
 // MOVIES STORE
 // ─────────────────────────────────────────────────────────────────────────────
-let moviesCache = null; // null = not yet loaded
+let moviesCache = null;   // null = not yet loaded
+let moviesCacheUid = null; // which user this cache belongs to
 const moviesListeners = new Set();
 function emitMovies() { moviesListeners.forEach((l) => l()); }
 
-async function loadMovies() {
-  const userId = await getCurrentUserId();
-  if (!userId) { moviesCache = []; emitMovies(); return; }
+async function loadMovies(userId) {
+  const uid = userId ?? await getCurrentUserId();
+  if (!uid) { moviesCache = []; moviesCacheUid = null; emitMovies(); return; }
   const { data } = await supabase
     .from("movies")
     .select("*")
-    .eq("user_id", userId)
+    .eq("user_id", uid)
     .order("created_at", { ascending: false });
   moviesCache = (data || []).map(dbToMovie);
+  moviesCacheUid = uid;
   emitMovies();
 }
 
@@ -213,18 +215,20 @@ export function useMovieActions() {
 // WATCHLIST STORE
 // ─────────────────────────────────────────────────────────────────────────────
 let watchlistCache = null;
+let watchlistCacheUid = null; // which user this cache belongs to
 const watchlistListeners = new Set();
 function emitWatchlist() { watchlistListeners.forEach((l) => l()); }
 
-async function loadWatchlist() {
-  const userId = await getCurrentUserId();
-  if (!userId) { watchlistCache = []; emitWatchlist(); return; }
+async function loadWatchlist(userId) {
+  const uid = userId ?? await getCurrentUserId();
+  if (!uid) { watchlistCache = []; watchlistCacheUid = null; emitWatchlist(); return; }
   const { data } = await supabase
     .from("watchlist")
     .select("*")
-    .eq("user_id", userId)
+    .eq("user_id", uid)
     .order("created_at", { ascending: false });
   watchlistCache = (data || []).map(dbToWatchlistItem);
+  watchlistCacheUid = uid;
   emitWatchlist();
 }
 
@@ -281,22 +285,38 @@ export function useWatchlistActions() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Auth state listener — clear caches when user signs in or out
+// Auth state listener — reload caches only when the active user actually changes.
+// TOKEN_REFRESHED keeps the same user → skip to avoid unnecessary reloads.
 // (Only registered in the browser, not during SSR)
 // ─────────────────────────────────────────────────────────────────────────────
 if (typeof window !== "undefined") {
-  supabase.auth.onAuthStateChange((event) => {
-    if (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
-      moviesCache   = null;
-      watchlistCache = null;
-      loadMovies();
-      loadWatchlist();
-    } else if (event === "SIGNED_OUT") {
-      moviesCache    = [];
-      watchlistCache = [];
+  supabase.auth.onAuthStateChange((event, session) => {
+    const newUid = session?.user?.id ?? null;
+
+    if (event === "SIGNED_OUT" || !newUid) {
+      // Hard clear — wipe immediately so no stale data is shown
+      moviesCache      = [];
+      moviesCacheUid   = null;
+      watchlistCache   = [];
+      watchlistCacheUid = null;
       emitMovies();
       emitWatchlist();
+      return;
     }
+
+    // Only reload if this is a different user (or cache was never loaded)
+    if (newUid !== moviesCacheUid) {
+      // Immediately clear stale data from the previous user
+      moviesCache      = null;
+      moviesCacheUid   = null;
+      watchlistCache   = null;
+      watchlistCacheUid = null;
+      emitMovies();
+      emitWatchlist();
+      loadMovies(newUid);
+      loadWatchlist(newUid);
+    }
+    // Same user + TOKEN_REFRESHED → do nothing, cache is still valid
   });
 }
 

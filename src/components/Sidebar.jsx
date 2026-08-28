@@ -75,12 +75,6 @@ export function Sidebar() {
               </div>
             </button>
 
-            <button
-              onClick={() => setAddOpen(true)}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-sm border border-[color:var(--color-brass)]/40 hover:bg-black/30 text-[color:var(--color-brass)] font-type text-[11px] uppercase tracking-widest transition-colors cursor-pointer"
-            >
-              <span>🕰️</span> Rate Past Movie
-            </button>
 
             <button
               onClick={() => setSettingsOpen(true)}
