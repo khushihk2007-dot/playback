@@ -1,19 +1,6 @@
 import { useSyncExternalStore, useCallback, useEffect } from "react";
 import { supabase } from "./supabase";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TMDB API KEY  (stored in localStorage — not sensitive)
-// ─────────────────────────────────────────────────────────────────────────────
-const DEFAULT_TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY || "";
-const TMDB_KEY_LS = "khu_playback_tmdb_key";
-
-export function getTmdbKey() {
-  if (typeof window === "undefined") return DEFAULT_TMDB_KEY;
-  return window.localStorage.getItem(TMDB_KEY_LS) || DEFAULT_TMDB_KEY;
-}
-export function setTmdbKey(k) {
-  if (typeof window !== "undefined") window.localStorage.setItem(TMDB_KEY_LS, k);
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS: convert DB row ↔ JS object
@@ -30,12 +17,9 @@ function dbToMovie(row) {
     watchTime:     row.watch_time    || "",
     rewatchCount:  Number(row.rewatch_count) || 0,
     tmdbId:        row.tmdb_id       || null,
-    director:      row.director      || "",
     runtime:       Number(row.runtime)       || 0,
     watchLocation: row.watch_location || "",
-    favoriteScene: row.favorite_scene || "",
     notes:         row.notes         || "",
-    seat:          row.seat          || "",
     serial:        row.serial        || "",
     createdAt:     row.created_at    || "",
   };
@@ -53,12 +37,9 @@ function movieToDb(movie, userId) {
     watch_time:     movie.watchTime      || "",
     rewatch_count:  Number(movie.rewatchCount)  || 0,
     tmdb_id:        movie.tmdbId         || null,
-    director:       movie.director       || "",
     runtime:        Number(movie.runtime)        || 0,
     watch_location: movie.watchLocation  || "",
-    favorite_scene: movie.favoriteScene  || "",
     notes:          movie.notes          || "",
-    seat:   movie.seat   || `${String.fromCharCode(65 + Math.floor(Math.random() * 20))}${Math.floor(Math.random() * 40) + 1}`,
     serial: movie.serial || String(Math.floor(Math.random() * 900000) + 100000),
   };
 }
@@ -169,9 +150,9 @@ export function useMovieActions() {
     const fieldMap = {
       title: "title", posterUrl: "poster_url", genres: "genres", summary: "summary",
       myRating: "my_rating", watchDate: "watch_date", watchTime: "watch_time",
-      rewatchCount: "rewatch_count", tmdbId: "tmdb_id", director: "director",
-      runtime: "runtime", watchLocation: "watch_location", favoriteScene: "favorite_scene",
-      notes: "notes", seat: "seat", serial: "serial",
+      rewatchCount: "rewatch_count", tmdbId: "tmdb_id",
+      runtime: "runtime", watchLocation: "watch_location",
+      notes: "notes", serial: "serial",
     };
     Object.entries(patch).forEach(([k, v]) => { if (fieldMap[k]) dbPatch[fieldMap[k]] = v; });
     const { error } = await supabase.from("movies").update(dbPatch).eq("id", id);
@@ -321,18 +302,11 @@ if (typeof window !== "undefined") {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Document title helpers
+// Document title helper
 // ─────────────────────────────────────────────────────────────────────────────
-export function useArchiveTitle() { return "Playback"; }
-
 export function useDocTitle(suffix) {
   useEffect(() => {
     const full = suffix ? `${suffix} • Playback` : "Playback";
     if (typeof document !== "undefined") document.title = full;
   }, [suffix]);
 }
-
-// Legacy stubs — kept so remaining imports don't break
-export function useProfile() { return { email: "", displayName: "" }; }
-export function setProfile() {}
-export function useDisplayName() { return ""; }

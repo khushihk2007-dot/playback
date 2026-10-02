@@ -1,4 +1,4 @@
-import { getTmdbKey } from "./store";
+const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
 const BASE = "https://api.tmdb.org/3";
 export const POSTER = (p, size = "w500") => (p ? `https://image.tmdb.org/t/p/${size}${p}` : "");
@@ -6,7 +6,7 @@ export const POSTER = (p, size = "w500") => (p ? `https://image.tmdb.org/t/p/${s
 let genreCache = null;
 export async function getGenreMap() {
   if (genreCache) return genreCache;
-  const res = await fetch(`${BASE}/genre/movie/list?api_key=${getTmdbKey()}`);
+  const res = await fetch(`${BASE}/genre/movie/list?api_key=${TMDB_KEY}`);
   if (!res.ok) throw new Error("Failed to load genres");
   const data = await res.json();
   genreCache = Object.fromEntries((data.genres || []).map((g) => [g.id, g.name]));
@@ -15,7 +15,7 @@ export async function getGenreMap() {
 
 export async function searchMovies(query) {
   if (!query.trim()) return [];
-  const res = await fetch(`${BASE}/search/movie?api_key=${getTmdbKey()}&query=${encodeURIComponent(query)}&include_adult=false`);
+  const res = await fetch(`${BASE}/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}&include_adult=false`);
   if (!res.ok) throw new Error("TMDB search failed");
   const data = await res.json();
   const map = await getGenreMap();
@@ -31,7 +31,7 @@ export async function searchMovies(query) {
 }
 
 export async function getMovieDetails(id) {
-  const res = await fetch(`${BASE}/movie/${id}?api_key=${getTmdbKey()}&append_to_response=credits`);
+  const res = await fetch(`${BASE}/movie/${id}?api_key=${TMDB_KEY}&append_to_response=credits`);
   if (!res.ok) throw new Error("TMDB details failed");
   const d = await res.json();
   const director = (d.credits?.crew || []).find((c) => c.job === "Director")?.name || "";

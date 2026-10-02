@@ -103,7 +103,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head><HeadContent /></head>
-      <body>{children}<Scripts /></body>
+      <body style={{ background: "#160a0a" }}>{children}<Scripts /></body>
     </html>
   );
 }
@@ -111,32 +111,16 @@ function RootShell({ children }: { children: ReactNode }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // AppGate — decides what to render based on auth state.
 //
-// Loading  → Spinner (session is being restored from localStorage)
+// Loading  → null (body bg is dark so no white flash)
 // No session → AuthPage (login / sign-up)
 // Session  → Main app with Sidebar
 // ─────────────────────────────────────────────────────────────────────────────
 function AppGate({ queryClient }) {
   const { session, loading } = useAuth();
 
-  // While Supabase restores the session (reads localStorage, usually <100ms)
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#1c1010] flex flex-col items-center justify-center gap-6">
-        <div className="relative h-20 w-20">
-          <div className="absolute inset-0 animate-spin rounded-full border-4 border-[#c8973c]/30 border-t-[#c8973c]" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-4 w-4 rounded-full bg-[#c8973c]/60" />
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="font-display text-4xl text-[#c8973c]">Playback</div>
-          <div className="mt-1 text-[10px] uppercase tracking-[0.35em] text-[#c8973c]/50">
-            Loading your archive…
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // While Supabase restores the session from localStorage (~50ms), render
+  // nothing. The dark body background (set in index.html) prevents a white flash.
+  if (loading) return null;
 
   // Not logged in — show the login / sign-up page
   if (!session) {

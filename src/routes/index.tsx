@@ -38,7 +38,6 @@ const SORTS = [
 function Home() {
   const movies = useMovies();
   const { displayName } = useAuth();
-  const archiveTitle = "Playback";
   useDocTitle();
   const g = greeting(displayName || "");
   const [q, setQ] = useState("");
@@ -76,7 +75,7 @@ function Home() {
           <div className="min-w-0">
             <div className="font-type text-[10px] uppercase tracking-[0.3em] text-[color:var(--color-faded)] mb-1">{g.line1}</div>
             <h1 className="font-display text-3xl md:text-5xl text-[color:var(--color-cinema)] leading-tight">
-              {archiveTitle}
+              Playback
             </h1>
             <p className="font-serif text-lg text-[color:var(--color-faded)] mt-1">{g.line2}</p>
           </div>
@@ -134,7 +133,7 @@ function Home() {
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState onAdd={() => setAddOpen(true)} hasMovies={movies.length > 0} name={name} />
+        <EmptyState onAdd={() => setAddOpen(true)} hasMovies={movies.length > 0} name={displayName} />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
           {filtered.map((m) => <TicketCard key={m.id} movie={m} />)}

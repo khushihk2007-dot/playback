@@ -40,7 +40,7 @@ function MovieDetail() {
   const save = () => {
     update(movie.id, {
       title: draft.title, myRating: Number(draft.myRating), watchDate: draft.watchDate,
-      notes: draft.notes, favoriteScene: draft.favoriteScene, watchLocation: draft.watchLocation,
+      notes: draft.notes, watchLocation: draft.watchLocation,
       summary: draft.summary,
     });
     setEditing(false);
